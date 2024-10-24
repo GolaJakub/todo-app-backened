@@ -1,0 +1,5 @@
+pl\jg\todo\repository\TodoRepository.class
+pl\jg\todo\service\TodoService.class
+pl\jg\todo\model\TodoEntity.class
+pl\jg\todo\TodoAppBackendApplication.class
+pl\jg\todo\controller\TodoController.class
