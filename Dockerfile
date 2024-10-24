@@ -8,6 +8,9 @@ WORKDIR /opt/app
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 
+# Make the Maven wrapper executable
+RUN chmod +x ./mvnw
+
 # Download Maven dependencies without running tests (to cache them)
 RUN ./mvnw dependency:go-offline
 
