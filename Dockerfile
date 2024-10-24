@@ -1,14 +1,33 @@
-# Użycie obrazu Eclipse Temurin jako bazowego
-FROM eclipse-temurin:17-jdk-alpine
+# Stage 1: Build the application using Maven and JDK 17
+FROM eclipse-temurin:17-jdk-jammy as builder
 
-# Tworzenie wolumenu dla tymczasowych danych (nie jest to konieczne, ale typowe dla Spring Boot)
-VOLUME /tmp
+# Set the working directory inside the container
+WORKDIR /opt/app
 
-# Skopiowanie zbudowanego pliku JAR do kontenera
-COPY target/todo-app-backend-0.0.1-SNAPSHOT.jar app.jar
+# Copy the Maven wrapper files
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
 
-# Ustawienie zmiennej środowiskowej dla portu, na którym ma nasłuchiwać aplikacja
-ENV PORT=8080
+# Download Maven dependencies without running tests (to cache them)
+RUN ./mvnw dependency:go-offline
 
-# Ustawienie punktu wejścia dla uruchomienia aplikacji
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+# Copy the source code into the container
+COPY ./src ./src
+
+# Build the application
+RUN ./mvnw clean install
+
+# Stage 2: Use a minimal JRE to run the application
+FROM eclipse-temurin:17-jre-jammy
+
+# Set the working directory inside the container
+WORKDIR /opt/app
+
+# Expose the port (ensure this matches the port used by the application)
+EXPOSE 8080
+
+# Copy the built JAR file from the builder stage
+COPY --from=builder /opt/app/target/*.jar /opt/app/app.jar
+
+# Define the entry point to run the Spring Boot application
+ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
